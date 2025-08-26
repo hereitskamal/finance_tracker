@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { BottomNavigation } from "@/components/layout/BottomNavigation"; // Import bottom nav
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { StorageDebug } from "@/components/debug/storage-debug";
 
 export default function DashboardLayout({
   children,
@@ -49,6 +50,9 @@ export default function DashboardLayout({
             onClick={() => setSidebarOpen(false)}
           />
         )}
+
+        {/* Debug Component */}
+        <StorageDebug />
       </div>
     </AuthGuard>
   );
