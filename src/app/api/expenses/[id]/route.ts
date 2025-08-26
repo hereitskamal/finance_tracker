@@ -1,5 +1,6 @@
-// src/app/api/expenses/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -22,11 +23,6 @@ interface ExpenseWithCategory {
   };
 }
 
-interface SupabaseUser {
-  id: string;
-  email?: string;
-}
-
 interface ExpenseResponse {
   expense: ExpenseWithCategory;
 }
@@ -35,58 +31,24 @@ const ExpenseSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   description: z.string().min(1, "Description is required").max(255),
   date: z.string().datetime("Invalid date format"),
-  category_id: z.string().uuid("Invalid category ID"),
+  categoryId: z.string().uuid("Invalid category ID"), // ✅ Fixed: Use categoryId consistently
 });
-
-// Helper function to get user from authorization header
-async function getUserFromAuth(request: NextRequest): Promise<SupabaseUser | null> {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing environment variables");
-  }
-
-  const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token: string = authHeader.substring(7);
-
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabaseAdmin.auth.getUser(token);
-    if (error || !user) {
-      return null;
-    }
-    return user as SupabaseUser;
-  } catch (error) {
-    console.error("Auth error:", error);
-    return null;
-  }
-}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ExpenseResponse | { error: string }>> {
   try {
-    const { id } = await params; // ✅ Fixed: Await params to get id
+    const { id } = await params;
     
-    const user: SupabaseUser | null = await getUserFromAuth(request);
-    if (!user) {
+    // ✅ Fixed: Use NextAuth session instead of Bearer token
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      console.log("No valid NextAuth session found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    console.log("Getting expense:", id, "for user:", session.user.id);
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -116,8 +78,8 @@ export async function GET(
           icon
         )
       `)
-      .eq("id", id) // ✅ Fixed: Use awaited id
-      .eq("user_id", user.id)
+      .eq("id", id)
+      .eq("user_id", session.user.id) // ✅ Fixed: Use session.user.id
       .single();
 
     if (error) {
@@ -147,12 +109,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ExpenseResponse | { error: string; details?: unknown }>> {
   try {
-    const { id } = await params; // ✅ Fixed: Await params to get id
+    const { id } = await params;
     
-    const user: SupabaseUser | null = await getUserFromAuth(request);
-    if (!user) {
+    // ✅ Fixed: Use NextAuth session instead of Bearer token
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      console.log("No valid NextAuth session found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    console.log("Updating expense:", id, "for user:", session.user.id);
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -172,16 +138,17 @@ export async function PUT(
     });
 
     const body = await request.json();
-    console.log("Updating expense:", id, "for user:", user.id);
+    console.log("Request body:", body);
 
-    const { amount, description, date, category_id } = ExpenseSchema.parse(body);
+    // ✅ Fixed: Use categoryId consistently with schema
+    const { amount, description, date, categoryId } = ExpenseSchema.parse(body);
 
     // Verify category belongs to user or is a default category
     const { data: category, error: categoryError } = await supabaseAdmin
       .from("categories")
       .select("id")
-      .or(`user_id.eq.${user.id},user_id.is.null`)
-      .eq("id", category_id)
+      .or(`user_id.eq.${session.user.id},user_id.is.null`)
+      .eq("id", categoryId)
       .single();
 
     if (categoryError || !category) {
@@ -198,11 +165,11 @@ export async function PUT(
         amount,
         description,
         date,
-        category_id,
+        category_id: categoryId, // ✅ Fixed: Map categoryId to category_id for database
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id) // ✅ Fixed: Use awaited id
-      .eq("user_id", user.id)
+      .eq("id", id)
+      .eq("user_id", session.user.id) // ✅ Fixed: Use session.user.id
       .select(`
         *,
         categories (
@@ -232,7 +199,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid input data", details: error.message },
+        { error: "Invalid input data", details: error.errors },
         { status: 400 }
       );
     }
@@ -249,12 +216,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ message: string } | { error: string }>> {
   try {
-    const { id } = await params; // ✅ Fixed: Await params to get id
+    const { id } = await params;
     
-    const user: SupabaseUser | null = await getUserFromAuth(request);
-    if (!user) {
+    // ✅ Fixed: Use NextAuth session instead of Bearer token
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      console.log("No valid NextAuth session found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    console.log("Deleting expense:", id, "for user:", session.user.id);
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -273,14 +244,12 @@ export async function DELETE(
       },
     });
 
-    console.log("Deleting expense:", id, "for user:", user.id);
-
     // First verify the expense exists and belongs to the user
     const { data: existingExpense, error: fetchError } = await supabaseAdmin
       .from("expenses")
       .select("id")
-      .eq("id", id) // ✅ Fixed: Use awaited id
-      .eq("user_id", user.id)
+      .eq("id", id)
+      .eq("user_id", session.user.id) // ✅ Fixed: Use session.user.id
       .single();
 
     if (fetchError || !existingExpense) {
@@ -291,8 +260,8 @@ export async function DELETE(
     const { error } = await supabaseAdmin
       .from("expenses")
       .delete()
-      .eq("id", id) // ✅ Fixed: Use awaited id
-      .eq("user_id", user.id);
+      .eq("id", id)
+      .eq("user_id", session.user.id); // ✅ Fixed: Use session.user.id
 
     if (error) {
       console.error("Delete expense error:", error);
