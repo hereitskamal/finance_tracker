@@ -333,8 +333,8 @@ export type PatchRouteHandler<T = RouteParams> = RouteHandler<T>;
 
 // Environment Variables Types
 export interface EnvironmentConfig {
-  NEXT_PUBLIC_SUPABASE_URL: string;
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  SUPABASE_URL: string;
+  SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   NEXTAUTH_URL: string;
   NEXTAUTH_SECRET: string;

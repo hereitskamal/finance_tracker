@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     console.log("User authenticated via NextAuth:", session.user);
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
