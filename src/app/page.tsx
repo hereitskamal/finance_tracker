@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import {
   IndianRupee,
   Download,
   X,
+  Code,
 } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -31,24 +31,20 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsVisible(true);
-
     // Auto-rotate features
     const interval = setInterval(() => {
       setActiveFeature((prev) => (prev + 1) % 3);
     }, 4000);
-
     // PWA Install Prompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstall(true);
     };
-
     window.addEventListener(
       "beforeinstallprompt",
       handleBeforeInstallPrompt as EventListener
     );
-
     return () => {
       clearInterval(interval);
       window.removeEventListener(
@@ -116,6 +112,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Developer Info Banner */}
+      <div className="bg-gray-900 text-white py-2 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center text-sm">
+          <Code className="w-4 h-4 mr-2" />
+          <span>Developed by <strong>Kamal Sharma</strong> | itskamalofficial@gmail.com</span>
+        </div>
+      </div>
+
       {/* Install Button - Fixed Top Right - Always Visible */}
       {showInstall && (
         <div className="fixed top-4 right-4 z-50">
@@ -148,7 +152,6 @@ export default function HomePage() {
           <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gray-900 rounded-full blur-3xl" />
           <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gray-700 rounded-full blur-3xl" />
         </div>
-
         <div className="relative max-w-7xl mx-auto px-4 py-20 sm:py-32">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
@@ -164,7 +167,6 @@ export default function HomePage() {
                 Trusted by 10,000+ users
               </span>
             </div>
-
             {/* Main Headline */}
             <h1
               className={`text-5xl sm:text-6xl lg:text-7xl font-light text-gray-900 mb-8 tracking-tight transition-all duration-1000 delay-300 ${
@@ -176,7 +178,6 @@ export default function HomePage() {
               <span className="block mb-2">Expense Tracking</span>
               <span className="font-bold">Simplified</span>
             </h1>
-
             {/* Subtitle */}
             <p
               className={`text-xl sm:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-500 ${
@@ -188,7 +189,6 @@ export default function HomePage() {
               Take control of your finances with intelligent tracking, beautiful
               insights, and actionable recommendations.
             </p>
-
             {/* CTA Buttons */}
             <div
               className={`flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 transition-all duration-1000 delay-700 ${
@@ -206,7 +206,6 @@ export default function HomePage() {
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-
               <Link href="/login">
                 <Button
                   variant="outline"
@@ -217,7 +216,6 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
-
             {/* Trust Indicators */}
             <div
               className={`flex items-center justify-center space-x-8 text-sm text-gray-500 transition-all duration-1000 delay-1000 ${
@@ -257,13 +255,11 @@ export default function HomePage() {
               insights actionable.
             </p>
           </div>
-
           {/* Interactive Features */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               const isActive = activeFeature === index;
-
               return (
                 <div
                   key={index}
@@ -287,7 +283,6 @@ export default function HomePage() {
                       }`}
                     />
                   </div>
-
                   <h3
                     className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
                       isActive ? "text-gray-900" : "text-gray-800"
@@ -295,11 +290,9 @@ export default function HomePage() {
                   >
                     {feature.title}
                   </h3>
-
                   <p className="text-gray-600 leading-relaxed mb-6">
                     {feature.description}
                   </p>
-
                   <div
                     className={`text-sm font-medium ${
                       isActive ? "text-gray-900" : "text-gray-500"
@@ -324,21 +317,18 @@ export default function HomePage() {
               </div>
               <p className="text-gray-600 font-medium">Happy Users</p>
             </div>
-
             <div className="group">
               <div className="text-4xl lg:text-5xl font-light text-gray-900 mb-2 group-hover:scale-110 transition-transform duration-300">
                 $2M+
               </div>
               <p className="text-gray-600 font-medium">Tracked</p>
             </div>
-
             <div className="group">
               <div className="text-4xl lg:text-5xl font-light text-gray-900 mb-2 group-hover:scale-110 transition-transform duration-300">
                 99.9%
               </div>
               <p className="text-gray-600 font-medium">Uptime</p>
             </div>
-
             <div className="group">
               <div className="text-4xl lg:text-5xl font-light text-gray-900 mb-2 group-hover:scale-110 transition-transform duration-300">
                 4.9★
@@ -355,7 +345,6 @@ export default function HomePage() {
           <h2 className="text-4xl font-light text-gray-900 text-center mb-16 tracking-tight">
             What our users say
           </h2>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <div
@@ -391,7 +380,6 @@ export default function HomePage() {
               Join thousands of users who&apos;ve already transformed their
               financial habits.
             </p>
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
                 <Button
@@ -402,7 +390,6 @@ export default function HomePage() {
                   <IndianRupee className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
                 </Button>
               </Link>
-
               <p className="text-sm text-gray-400">No credit card required</p>
             </div>
           </div>

@@ -15,7 +15,6 @@ const navigation = [
   { name: "Expenses", href: "/expenses", icon: Receipt },
   { name: "Analytics", href: "/analytics", icon: TrendingUp },
   { name: "Categories", href: "/categories", icon: Tag },
-//   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function BottomNavigation() {
