@@ -13,11 +13,20 @@ import {
   Users,
   Shield,
   IndianRupee,
+  Download,
+  X,
 } from "lucide-react";
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -27,8 +36,30 @@ export default function HomePage() {
       setActiveFeature((prev) => (prev + 1) % 3);
     }, 4000);
 
-    return () => clearInterval(interval);
+    // PWA Install Prompt
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setShowInstall(false);
+      console.log(`Install outcome: ${outcome}`);
+    }
+  };
 
   const features = [
     {
@@ -74,6 +105,29 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Install Button - Fixed Top Right */}
+      {showInstall && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-gray-900 text-white rounded-full shadow-lg border border-gray-200 overflow-hidden">
+            <div className="flex items-center">
+              <button
+                onClick={handleInstallClick}
+                className="flex items-center gap-2 px-4 py-3 hover:bg-gray-800 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:block">Install App</span>
+              </button>
+              <button
+                onClick={() => setShowInstall(false)}
+                className="p-3 hover:bg-gray-800 border-l border-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Subtle Background Elements */}
