@@ -19,6 +19,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
+    if (status === "loading") return; // Don't update while loading
+
     if (session?.user) {
       setUser({
         id: session.user.id as string,
@@ -28,12 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setUser(null);
     }
-  }, [session]);
+  }, [session, status]);
 
   const value: AuthContextType = {
     user,
     isLoading: status === "loading",
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && status === "authenticated",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
