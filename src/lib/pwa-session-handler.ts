@@ -1,7 +1,7 @@
 // PWA session handler for managing session persistence
 "use client";
 
-import { sessionStorage } from "./session-storage";
+import { persistentStorage } from "./session-storage";
 
 export class PWASessionHandler {
   private static instance: PWASessionHandler;
@@ -63,14 +63,14 @@ export class PWASessionHandler {
 
   private validateSessionOnResume() {
     // Check if stored session is still valid when PWA resumes
-    const storedSession = sessionStorage.getSession();
+    const storedSession = persistentStorage.getSession();
     if (storedSession) {
       const now = new Date();
       const expiry = new Date(storedSession.expires);
 
       if (now > expiry) {
         console.log("Stored session expired, clearing...");
-        sessionStorage.clearSession();
+        persistentStorage.clearSession();
         // Trigger a page reload to handle expired session
         window.location.reload();
       }
@@ -85,14 +85,14 @@ export class PWASessionHandler {
         const result = await response.json();
         if (result.valid && result.session?.user) {
           // Update local storage with fresh session data
-          sessionStorage.setSession({
+          persistentStorage.setSession({
             user: result.session.user,
             expires: result.session.expires,
           });
           return true;
         } else {
           // Server session is invalid, clear local storage
-          sessionStorage.clearSession();
+          persistentStorage.clearSession();
           return false;
         }
       }

@@ -69,6 +69,14 @@ export const authOptions: NextAuthOptions = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (session.user as any).id = token.id;
       }
+
+      // Add expires field for session persistence
+      if (!session.expires) {
+        session.expires = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ).toISOString();
+      }
+
       return session;
     },
   },

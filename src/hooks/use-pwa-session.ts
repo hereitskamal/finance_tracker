@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { sessionStorage } from "@/lib/session-storage";
+import { persistentStorage } from "@/lib/session-storage";
 import { PWASessionHandler } from "@/lib/pwa-session-handler";
 
 export function usePWASession() {
@@ -15,7 +15,7 @@ export function usePWASession() {
 
       // If no active session, try to restore from storage
       if (!session && status === "unauthenticated") {
-        const storedSession = sessionStorage.getSession();
+        const storedSession = persistentStorage.getSession();
         if (storedSession) {
           // Try to sync with server to validate stored session
           await PWASessionHandler.getInstance().syncSessionWithServer();
@@ -30,6 +30,6 @@ export function usePWASession() {
 
   return {
     isRestoring: isRestoring && status !== "loading",
-    hasStoredSession: sessionStorage.hasValidSession(),
+    hasStoredSession: persistentStorage.hasValidSession(),
   };
 }
