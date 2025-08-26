@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
 import { Menu } from "lucide-react";
+import { sessionStorage } from "@/lib/session-storage";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -50,7 +51,10 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    sessionStorage.clearSession();
+                    signOut();
+                  }}
                   className="text-gray-500 hover:text-gray-700 px-2 sm:px-3"
                 >
                   <span className="hidden sm:block">Sign out</span>

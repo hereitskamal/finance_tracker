@@ -40,6 +40,13 @@ const withPWA = require("next-pwa")({
         },
       },
     },
+    {
+      urlPattern: /\/api\/auth\/.*/,
+      handler: "NetworkOnly", // Never cache auth endpoints
+      options: {
+        cacheName: "auth-cache",
+      },
+    },
   ],
 });
 
