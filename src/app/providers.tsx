@@ -4,6 +4,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "@/context/auth-context";
+import DisableZoomiOS from "@/components/ui/disable-zoom-ios";
 import "@/lib/pwa-session-handler"; // Initialize PWA session handling
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       refetchInterval={5 * 60} // Refetch session every 5 minutes
       refetchOnWindowFocus={true} // Refetch when window gains focus
     >
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <DisableZoomiOS />
+        {children}
+      </AuthProvider>
     </SessionProvider>
   );
 }
