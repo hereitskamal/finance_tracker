@@ -30,10 +30,11 @@ export function ExpenseForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [amountError, setAmountError] = useState("");
 
   useEffect(() => {
     loadCategories();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCategories = async () => {
@@ -55,7 +56,7 @@ export function ExpenseForm({
         setCategories([]);
         setError("Failed to load categories. Please try again.");
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setCategories([]);
       setError("Failed to load categories. Please try again.");
@@ -64,10 +65,54 @@ export function ExpenseForm({
     }
   };
 
+  const validateAmount = (value: string): boolean => {
+    setAmountError("");
+
+    if (!value.trim()) {
+      setAmountError("Amount is required");
+      return false;
+    }
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      setAmountError("Please enter a valid number");
+      return false;
+    }
+
+    if (numValue <= 0) {
+      setAmountError("Amount must be greater than 0");
+      return false;
+    }
+
+    if (numValue > 999999.99) {
+      setAmountError("Amount is too large");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAmount(value);
+
+    if (value.trim()) {
+      validateAmount(value);
+    } else {
+      setAmountError("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    // Validate amount before submission
+    if (!validateAmount(amount)) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const data = {
@@ -104,13 +149,25 @@ export function ExpenseForm({
           </div>
           <Input
             type="number"
+            inputMode="decimal"
             step="0.01"
+            min="0.01"
+            max="999999.99"
             placeholder="0.00"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={handleAmountChange}
             required
-            className="text-lg border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0"
+            className={`text-lg border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0 ${amountError ? "border-red-300 focus:border-red-500" : ""
+              }`}
+            style={{
+              fontSize: '16px', // Prevents zoom on iOS
+              WebkitAppearance: 'none',
+              MozAppearance: 'textfield'
+            }}
           />
+          {amountError && (
+            <p className="text-sm text-red-600 mt-1">{amountError}</p>
+          )}
         </div>
 
         {/* Description Field */}
@@ -128,6 +185,10 @@ export function ExpenseForm({
             onChange={(e) => setDescription(e.target.value)}
             required
             className="border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0"
+            style={{
+              fontSize: '16px', // Prevents zoom on iOS
+              WebkitAppearance: 'none'
+            }}
           />
         </div>
 
@@ -143,6 +204,10 @@ export function ExpenseForm({
             onChange={(e) => setDate(e.target.value)}
             required
             className="border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0"
+            style={{
+              fontSize: '16px', // Prevents zoom on iOS
+              WebkitAppearance: 'none'
+            }}
           />
         </div>
 
@@ -178,6 +243,10 @@ export function ExpenseForm({
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full h-10 px-3 text-sm border border-gray-200 rounded-xl focus:border-gray-900 focus:ring-0 focus:outline-none"
               required
+              style={{
+                fontSize: '16px', // Prevents zoom on iOS
+                WebkitAppearance: 'none'
+              }}
             >
               <option value="">Choose a category</option>
               {categories.map((category) => (
