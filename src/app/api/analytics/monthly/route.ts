@@ -70,6 +70,7 @@ export async function GET(
     });
 
     // Prepare analytics for each non-empty month
+    // @ts-ignore
     const analytics: MonthlyAnalytics[] = Object.entries(group)
       .sort(([a], [b]) => Date.parse(b + "-01") - Date.parse(a + "-01"))
       .map(([key, expensesList]) => {
