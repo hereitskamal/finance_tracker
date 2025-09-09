@@ -17,7 +17,7 @@ export function DashboardStats() {
   const loadAnalytics = async () => {
     try {
       const data = await apiClient.getMonthlyAnalytics();
-      setAnalytics(data);
+      setAnalytics(data?.[0]);
     } catch (error) {
       console.error("Failed to load analytics:", error);
     } finally {
@@ -64,7 +64,7 @@ export function DashboardStats() {
     },
     {
       title: "Expenses",
-      value: analytics.expenseCount.toLocaleString(),
+      value: analytics.expenseCount?.toLocaleString(),
       icon: Receipt,
       color: "green",
       bgColor: "from-green-50 to-green-100",

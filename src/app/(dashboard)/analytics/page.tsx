@@ -10,11 +10,14 @@ import {
   PieChart,
   BarChart3,
   IndianRupee,
+  ChevronDown,
 } from "lucide-react";
 
 export default function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<MonthlyAnalytics | null>(null);
+  const [months, setMonths] = useState<MonthlyAnalytics[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -22,82 +25,141 @@ export default function AnalyticsPage() {
 
   const loadAnalytics = async () => {
     try {
-      const data = await apiClient.getMonthlyAnalytics();
-      setAnalytics(data);
-    } catch (error) {
-      console.error("Failed to load analytics:", error);
+      const data = await apiClient.getMonthlyAnalytics(); // Expects: MonthlyAnalytics[]
+      setMonths(data || []);
+      // On first load, set selected index to current month if available
+      const today = new Date();
+      const idx = (data || []).findIndex(
+        (m) => m.year === today.getFullYear() && m.month === today.getMonth() + 1
+      );
+      setSelectedIndex(idx > -1 ? idx : 0);
+    } catch {
+      setMonths([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    const close = () => setDropdownOpen(false);
+    if (dropdownOpen) {
+      window.addEventListener("click", close);
+      return () => window.removeEventListener("click", close);
+    }
+  }, [dropdownOpen]);
+
+  const handleSelectMonth = (idx: number) => {
+    setSelectedIndex(idx);
+    setDropdownOpen(false);
+  };
+
   if (isLoading) {
-    return (
-      <div className="space-y-12">
-        {/* Header Skeleton */}
-        <div>
-          <div className="h-10 bg-gray-100 rounded w-48 mb-2 animate-pulse" />
-          <div className="h-5 bg-gray-100 rounded w-64 animate-pulse" />
-        </div>
-
-        {/* Stats Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-3xl border border-gray-100 p-8"
-            >
-              <div className="h-12 w-12 bg-gray-100 rounded-2xl mb-6 animate-pulse" />
-              <div className="h-8 bg-gray-100 rounded w-24 mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-100 rounded w-16 animate-pulse" />
-            </div>
-          ))}
-        </div>
-
-        {/* Category Breakdown Skeleton */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-8">
-          <div className="h-6 bg-gray-100 rounded w-48 mb-8 animate-pulse" />
-          <div className="space-y-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="flex justify-between">
-                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
-                  <div className="h-4 bg-gray-100 rounded w-20 animate-pulse" />
-                </div>
-                <div className="h-3 bg-gray-100 rounded-full animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!analytics) {
     return (
       <div className="text-center py-24">
         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <BarChart3 className="w-8 h-8 text-gray-300" />
         </div>
-        <h2 className="text-2xl font-light text-gray-900 mb-2">
-          No Analytics Available
-        </h2>
-        <p className="text-gray-500">
-          Start tracking expenses to see your insights
-        </p>
+        <div className="h-6 bg-gray-100 rounded w-48 mb-8 animate-pulse mx-auto" />
+        <div className="h-10 bg-gray-100 rounded w-48 mb-2 animate-pulse mx-auto" />
+        <div className="h-5 bg-gray-100 rounded w-64 animate-pulse mx-auto" />
       </div>
     );
   }
 
-  const categoryData = Object.entries(analytics.categoryBreakdown).map(
-    ([name, data]) => ({ name, ...data }),
-  );
+  if (!months.length) {
+    return (
+      <div className="text-center py-24">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <BarChart3 className="w-8 h-8 text-gray-300" />
+        </div>
+        <h2 className="text-2xl font-light text-gray-900 mb-2">No Analytics Available</h2>
+        <p className="text-gray-500">Start tracking expenses to see your insights</p>
+      </div>
+    );
+  }
 
-  // Sort categories by total amount (descending)
+  const selected = months[selectedIndex];
+  const categoryData = Object.entries(selected.categoryBreakdown).map(([name, data]) => ({
+    name,
+    ...data,
+  }));
   const sortedCategoryData = categoryData.sort((a, b) => b.total - a.total);
 
   return (
     <div className="space-y-12">
+      {/* Beautiful Custom Dropdown */}
+      <div className="relative w-full max-w-xs">
+        <label
+          htmlFor="month-dropdown"
+          className="block text-gray-700 font-light mb-2"
+        >
+          Month
+        </label>
+        <button
+          id="month-dropdown"
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={dropdownOpen}
+          onClick={(e) => {
+            e.stopPropagation();
+            setDropdownOpen((open) => !open);
+          }}
+          className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <span>{`${new Date(
+            selected.year,
+            selected.month - 1
+          ).toLocaleString("en-US", { month: "long" })} ${selected.year}`}</span>
+          <ChevronDown className="w-5 h-5 ml-2 text-gray-500" />
+        </button>
+        {dropdownOpen && (
+          <ul
+            tabIndex={-1}
+            role="listbox"
+            className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto animate-fade-in"
+            style={{ minWidth: "100%" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {months.map((m, idx) => (
+              <li
+                key={`${m.year}-${m.month}`}
+                role="option"
+                aria-selected={idx === selectedIndex}
+                tabIndex={0}
+                className={`cursor-pointer px-4 py-2 hover:bg-blue-50 ${idx === selectedIndex
+                    ? "bg-blue-100 text-blue-700 font-semibold"
+                    : "text-gray-700"
+                  }`}
+                onClick={() => handleSelectMonth(idx)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    handleSelectMonth(idx);
+                }}
+              >
+                {`${new Date(m.year, m.month - 1).toLocaleString("en-US", {
+                  month: "long",
+                })} ${m.year}`}
+              </li>
+            ))}
+          </ul>
+        )}
+        <style jsx>{`
+          @keyframes fade-in {
+            0% {
+              opacity: 0;
+              transform: scaleY(0.98);
+            }
+            100% {
+              opacity: 1;
+              transform: scaleY(1);
+            }
+          }
+          .animate-fade-in {
+            animation: fade-in 0.12s ease;
+          }
+        `}</style>
+      </div>
+
       {/* Minimal Header */}
       <div>
         <h1 className="text-4xl font-light text-gray-900 tracking-tight mb-2">
@@ -105,10 +167,13 @@ export default function AnalyticsPage() {
         </h1>
         <p className="text-gray-500 font-light">
           Your spending insights for{" "}
-          {new Date().toLocaleDateString("en-US", {
-            month: "long",
-            year: "numeric",
-          })}
+          {new Date(selected.year, selected.month - 1).toLocaleDateString(
+            "en-US",
+            {
+              month: "long",
+              year: "numeric",
+            }
+          )}
         </p>
       </div>
 
@@ -128,7 +193,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-2">
             <p className="text-3xl font-light text-gray-900 tracking-tight">
-              {formatCurrencyInr(analytics.totalAmount)}
+              {formatCurrencyInr(selected.totalAmount)}
             </p>
             <p className="text-sm text-gray-500">This month</p>
           </div>
@@ -148,7 +213,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-2">
             <p className="text-3xl font-light text-gray-900 tracking-tight">
-              {analytics.expenseCount.toLocaleString()}
+              {selected.expenseCount.toLocaleString()}
             </p>
             <p className="text-sm text-gray-500">Total expenses</p>
           </div>
@@ -168,7 +233,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-2">
             <p className="text-3xl font-light text-gray-900 tracking-tight">
-              {formatCurrencyInr(analytics.avgPerDay)}
+              {formatCurrencyInr(selected.avgPerDay)}
             </p>
             <p className="text-sm text-gray-500">Per day</p>
           </div>
@@ -183,9 +248,7 @@ export default function AnalyticsPage() {
               <PieChart className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-medium text-gray-900">
-                Spending by Category
-              </h2>
+              <h2 className="text-2xl font-medium text-gray-900">Spending by Category</h2>
               <p className="text-gray-500 text-sm">
                 Your top expense categories this month
               </p>
@@ -199,20 +262,16 @@ export default function AnalyticsPage() {
               <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <PieChart className="w-6 h-6 text-gray-300" />
               </div>
-              <p className="text-gray-500 mb-4">
-                No category data available yet
-              </p>
+              <p className="text-gray-500 mb-4">No category data available yet</p>
               <p className="text-sm text-gray-400">
                 Add some expenses to see your spending breakdown
               </p>
             </div>
           ) : (
             <div className="space-y-6">
-              {sortedCategoryData.map((category, index) => {
+              {sortedCategoryData.map((category, idx) => {
                 const percentage =
-                  analytics.totalAmount > 0
-                    ? (category.total / analytics.totalAmount) * 100
-                    : 0;
+                  selected.totalAmount > 0 ? (category.total / selected.totalAmount) * 100 : 0;
 
                 return (
                   <div key={category.name} className="group">
@@ -222,24 +281,17 @@ export default function AnalyticsPage() {
                           className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
                           style={{ backgroundColor: `${category.color}20` }}
                         >
-                          <span style={{ color: category.color }}>
-                            #{index + 1}
-                          </span>
+                          <span style={{ color: category.color }}>#{idx + 1}</span>
                         </div>
-                        <span className="font-medium text-gray-900">
-                          {category.name}
-                        </span>
+                        <span className="font-medium text-gray-900">{category.name}</span>
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-gray-900">
                           {formatCurrencyInr(category.total)}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {percentage.toFixed(1)}%
-                        </div>
+                        <div className="text-sm text-gray-500">{percentage.toFixed(1)}%</div>
                       </div>
                     </div>
-
                     <div className="relative">
                       <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                         <div
@@ -250,16 +302,6 @@ export default function AnalyticsPage() {
                           }}
                         />
                       </div>
-
-                      {/* Animated progress indicator */}
-                      <div
-                        className="absolute top-0 left-0 h-full bg-white rounded-full opacity-30 transition-all duration-1000"
-                        style={{
-                          width: `${Math.min(percentage + 10, 100)}%`,
-                          transform: "scaleX(0)",
-                          animation: `progressPulse 2s ease-in-out ${index * 0.2}s forwards`,
-                        }}
-                      />
                     </div>
                   </div>
                 );
@@ -268,21 +310,6 @@ export default function AnalyticsPage() {
           )}
         </div>
       </div>
-
-      {/* Add custom CSS for animations */}
-      <style jsx>{`
-        @keyframes progressPulse {
-          0% {
-            transform: scaleX(0);
-          }
-          50% {
-            transform: scaleX(1);
-          }
-          100% {
-            transform: scaleX(0);
-          }
-        }
-      `}</style>
     </div>
   );
 }
