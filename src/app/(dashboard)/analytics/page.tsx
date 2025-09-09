@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -133,8 +135,8 @@ export default function AnalyticsPage() {
                 aria-selected={idx === selectedIndex}
                 tabIndex={0}
                 className={`cursor-pointer px-4 py-2 hover:bg-blue-50 ${idx === selectedIndex
-                    ? "bg-blue-100 text-blue-700 font-semibold"
-                    : "text-gray-700"
+                  ? "bg-blue-100 text-blue-700 font-semibold"
+                  : "text-gray-700"
                   }`}
                 onClick={() => handleSelectMonth(idx)}
                 onKeyPress={(e) => {
