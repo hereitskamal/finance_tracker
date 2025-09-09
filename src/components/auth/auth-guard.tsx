@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { persistentStorage } from "@/lib/session-storage";
+// import { persistentStorage } from "@/lib/session-storage";
 import { usePWASession } from "@/hooks/use-pwa-session";
 
 interface AuthGuardProps {

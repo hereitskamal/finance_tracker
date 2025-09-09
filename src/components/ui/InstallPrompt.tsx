@@ -23,9 +23,9 @@ export default function InstallPrompt() {
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
-    
+
     deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const { outcome: _outcome } = await deferredPrompt.userChoice;
     setDeferredPrompt(null);
     setShowInstall(false);
   };
@@ -43,13 +43,13 @@ export default function InstallPrompt() {
           </div>
         </div>
         <div className="flex gap-2 ml-4">
-          <button 
+          <button
             onClick={handleInstall}
             className="bg-white text-blue-600 px-4 py-2 rounded font-medium hover:bg-gray-100 transition-colors"
           >
             Install
           </button>
-          <button 
+          <button
             onClick={() => setShowInstall(false)}
             className="text-white hover:text-gray-200 w-8 h-8 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
           >
