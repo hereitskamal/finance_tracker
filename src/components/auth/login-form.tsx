@@ -26,7 +26,6 @@ export function LoginForm() {
         email,
         password,
         redirect: false,
-        callbackUrl: "/dashboard",
       });
 
       if (result?.error) {
@@ -34,7 +33,7 @@ export function LoginForm() {
       } else {
         router.push("/dashboard");
       }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setError("Something went wrong. Please try again.");
     } finally {
